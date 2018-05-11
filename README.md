@@ -1,6 +1,6 @@
 # ScrollView
 custom scroll-view for minigame
 
-- show
+- Result
 
-  ![1](https://github.com/Jedore/ScrollView/images/1.png)
+  ![1](https://github.com/Jedore/ScrollView/blob/master/images/1.png)
