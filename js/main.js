@@ -20,24 +20,13 @@ export default class Main {
       lineColor: "white",
       colTitle: ["Col0", "Col1", "Col2", "Col3", "Col4"],
       titleColor: "white",
-      titleEdgeX: 15,
-      titleEdgeY: 10,
       rcBgColor: {
         rows: [[0, "blue"]],
-        cols: [[2, "gray"]],
-        cells:[[1, 1, "yellow"], [3, 3, "green"]],
+        cols: [[2, "purple"]],
+        cells:[[4, 0, "yellow"], [3, 3, "green"]],
       },
       hasTitle: true,
-      itemContent: [
-        [1, 2, "row1"], 
-        [2, 2, "row2"],
-        [3, 2, "row3"],
-        [5, 2, "row5"],
-        [7, 2, "row7"],
-        [9, 2, "row9"],
-      ],
-      itemEdgeX: 15,
-      itemEdgeY: 10,
+      
     }
     this.scrollView = null
 
@@ -50,8 +39,6 @@ export default class Main {
       success: info => {
         this.optionSV.height = info.windowHeight - this.optionSV.edgeBottom - this.optionSV.edgeTop
         this.optionSV.width = info.windowWidth - this.optionSV.edgeLeft - this.optionSV.edgeRight
-        this.optionSV.rowH = this.optionSV.height / this.optionSV.rowNum
-        this.optionSV.colW = this.optionSV.width / this.optionSV.colNum
       }
     })
 
@@ -65,8 +52,18 @@ export default class Main {
 
     this.ctx = ctx
 
+    let itemContent = [
+        [1, 2, "row1"], 
+        [2, 2, "row2"],
+        [3, 2, "row3"],
+        [5, 2, "row5"],
+        [7, 2, "row7"],
+        [9, 2, "row9"],
+      ]
     this.scrollView = gScrollView(this.ctx, this.optionSV)
+    this.scrollView.init()
     this.scrollView.draw()
+    this.scrollView.drawItem(itemContent)
   }
 }
 
