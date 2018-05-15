@@ -1,5 +1,5 @@
 # ScrollView
-custom scroll-view for minigame
+custom scroll-view for Wechat minigame
 
 - Result
 
