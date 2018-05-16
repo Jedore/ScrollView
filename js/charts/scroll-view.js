@@ -34,8 +34,10 @@ module.exports = function(ctx, options) {
     colW: options.colW,
     edgeLeft: options.edgeLeft,
     edgeTop: options.edgeTop,
-    width: options.width,
-    height: options.height,
+    edgeRight: options.edgeRight,
+    edgeBottom: options.edgeBottom,
+    width: 0,
+    height: 0,
     lineColor: options.lineColor || "black",
     lineWidth: options.lineWidth || 1.0,
     colTitle: options.colTitle || [],
@@ -49,6 +51,12 @@ module.exports = function(ctx, options) {
 
     // some init operation
     init: function() {
+      wx.getSystemInfo({
+        success: info => {
+          this.height = info.windowHeight - this.edgeBottom - this.edgeTop
+          this.width = info.windowWidth - this.edgeLeft - this.edgeRight
+        }
+      })
       this.rowH = (this.height - this.lineWidth * (this.rowNum + 1)) / this.rowNum
       this.colW = (this.width - this.lineWidth * (this.colNum + 1)) / this.colNum
     },
@@ -58,16 +66,22 @@ module.exports = function(ctx, options) {
       let ctx = this.ctx
       ctx.strokeStyle = this.lineColor
       ctx.lineWidth = this.lineWidth
+
+      ctx.translate(this.edgeLeft, this.edgeTop)
+
+      let startX = 0
+      let endX = startX + this.width;
+      let startY, endY
       for(let i=0; i < this.rowNum+1; i++) {
-        let startX = this.edgeLeft;
-        let endX = this.edgeLeft + this.width;
-        let startY = this.edgeTop + i * (this.rowH + this.lineWidth)
-        let endY = startY
+        startY = i * (this.rowH + this.lineWidth)
+        endY = startY
         ctx.beginPath();
         ctx.moveTo(startX, startY);
         ctx.lineTo(endX, endY);
         ctx.stroke();
       }
+
+      ctx.translate(- this.edgeLeft, - this.edgeTop)
     },
 
     // draw vertical
@@ -75,31 +89,42 @@ module.exports = function(ctx, options) {
       let ctx = this.ctx
       ctx.strokeStyle = this.lineColor
       ctx.lineWidth = this.lineWidth
+
+      ctx.translate(this.edgeLeft, this.edgeTop)
+
+      let startY = 0
+      let endY = startY + this.height
+      let startX = 0
+      let endX = 0
       for(let i=0; i < this.colNum+1; i++) {
-        let startX = this.edgeLeft + i * (this.colW + this.lineWidth)
-        let endX = startX
-        let startY = this.edgeTop
-        let endY = startY + this.height
+        startX = i * (this.colW + this.lineWidth)
+        endX = startX
         ctx.beginPath()
         ctx.moveTo(startX, startY)
         ctx.lineTo(endX, endY)
         ctx.stroke()
       }
+
+      ctx.translate(- this.edgeLeft, - this.edgeTop)
     },
 
     // draw column title
     drawColTitle: function() {
-      let startX = 0
-      let startY = this.edgeTop + this.lineWidth + this.rowH / 2
       let ctx = this.ctx
       ctx.font = this.titleFont
       ctx.fillStyle = this.titleColor 
       ctx.textAlign = "center"
       ctx.textBaseline = "middle"
+
+      ctx.translate(this.edgeLeft + this.lineWidth, this.edgeTop + this.lineWidth)
+
+      let startX = 0
+      let startY = this.rowH / 2
       for(let i=0; i<this.colTitle.length; i++) {
-        startX = this.edgeLeft + this.lineWidth + i * (this.colW + this.lineWidth) + this.colW / 2
+        startX = i * (this.colW + this.lineWidth) + this.colW / 2
         ctx.fillText(this.colTitle[i], startX, startY)
       }
+      ctx.translate(- this.edgeLeft - this.lineWidth, - this.edgeTop - this.lineWidth)
     },
 
     // draw background color
@@ -109,10 +134,12 @@ module.exports = function(ctx, options) {
       this.ctx.fillStyle = this.bgColor
       this.ctx.fillRect(this.edgeLeft, this.edgeTop, this.width, this.height)
       
+      ctx.translate(this.edgeLeft + this.lineWidth, this.edgeTop + this.lineWidth)
+
       // for column
       for(let i=0; i<this.rcBgColor.cols.length; i++) {
-        startX = this.edgeLeft + this.lineWidth + this.rcBgColor.cols[i][0] * (this.colW + this.lineWidth)
-        startY = this.edgeTop + this.lineWidth + (this.hasTitle ? (this.rowH + this.lineWidth) : 0)
+        startX = this.rcBgColor.cols[i][0] * (this.colW + this.lineWidth)
+        startY = this.hasTitle ? (this.rowH + this.lineWidth) : 0
         w = this.colW
         h = this.height - 3 * this.lineWidth - (this.hasTitle ? (this.rowH + this.lineWidth) : 0)
         this.ctx.fillStyle = this.rcBgColor.cols[i][1]
@@ -120,8 +147,8 @@ module.exports = function(ctx, options) {
       }
       // for row
       for(let i=0; i<this.rcBgColor.rows.length; i++) {
-        startX = this.edgeLeft + this.lineWidth
-        startY = this.edgeTop + this.lineWidth + this.rcBgColor.rows[i][0] * (this.rowH + this.lineWidth)
+        startX = 0
+        startY = this.rcBgColor.rows[i][0] * (this.rowH + this.lineWidth)
         w = this.width - 3 * this.lineWidth
         h = this.rowH - this.lineWidth
         this.ctx.fillStyle = this.rcBgColor.rows[i][1]
@@ -130,23 +157,26 @@ module.exports = function(ctx, options) {
 
       // for cell
       for(let i=0; i<this.rcBgColor.cells.length; i++){
-        startX = this.edgeLeft + this.lineWidth + this.rcBgColor.cells[i][1] * (this.colW + this.lineWidth)
-        startY = this.edgeTop + this.lineWidth + this.rcBgColor.cells[i][0] * (this.rowH + this.lineWidth)
+        startX = this.rcBgColor.cells[i][1] * (this.colW + this.lineWidth)
+        startY = this.rcBgColor.cells[i][0] * (this.rowH + this.lineWidth)
         w = this.colW - this.lineWidth
         h = this.rowH - this.lineWidth
         this.ctx.fillStyle = this.rcBgColor.cells[i][2]
         this.ctx.fillRect(startX, startY, w, h)
       }
+
+      ctx.translate(- this.edgeLeft - this.lineWidth, - this.edgeTop - this.lineWidth)
     },
 
     // draw item content
     drawItem: function(itemContent) {
       let startX, startY, w, h
       let ctx = this.ctx
+      ctx.translate(this.edgeLeft + this.lineWidth, this.edgeTop + this.lineWidth)
       for(let i=0; i<itemContent.length; i++) {
         // clear old item
-        startX = this.edgeLeft + this.lineWidth + itemContent[i][1] * (this.colW + this.lineWidth)
-        startY = this.edgeTop + this.lineWidth + itemContent[i][0] * (this.rowH + this.lineWidth)
+        startX = itemContent[i][1] * (this.colW + this.lineWidth)
+        startY = itemContent[i][0] * (this.rowH + this.lineWidth)
         w = this.colW - this.lineWidth
         h = this.rowH - this.lineWidth
         ctx.clearRect(startX, startY, w, h)
@@ -186,10 +216,11 @@ module.exports = function(ctx, options) {
         ctx.fillStyle = this.itemColor 
         ctx.textAlign = "center"
         ctx.textBaseline = "middle"
-        startX = this.edgeLeft + this.lineWidth + itemContent[i][1] * (this.colW + this.lineWidth) + this.colW / 2
-        startY = this.edgeTop + this.lineWidth + itemContent[i][0] * (this.rowH + this.lineWidth) + this.rowH / 2
+        startX = itemContent[i][1] * (this.colW + this.lineWidth) + this.colW / 2
+        startY = itemContent[i][0] * (this.rowH + this.lineWidth) + this.rowH / 2
         ctx.fillText(itemContent[i][2], startX, startY)
       }
+      ctx.translate(- this.edgeLeft - this.lineWidth, - this.edgeTop - this.lineWidth)
     },
 
     draw: function() {
